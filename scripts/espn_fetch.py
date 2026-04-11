@@ -10,18 +10,19 @@ Usage:
     python espn_fetch.py standings basketball nba
     python espn_fetch.py teams football nfl
     python espn_fetch.py roster basketball nba 13
-    python espn_fetch.py summary basketball nba 401765432
+    python espn_fetch.py summary basketball nba 401811026
     python espn_fetch.py athlete-stats basketball nba 3136776
     python espn_fetch.py athlete-gamelog basketball nba 3136776
     python espn_fetch.py injuries football nfl
     python espn_fetch.py news basketball nba
-    python espn_fetch.py odds basketball nba 401765432
-    python espn_fetch.py cdn-game nba 401765432
+    python espn_fetch.py odds basketball nba 401811026
+    python espn_fetch.py cdn-game nba 401811026
     python espn_fetch.py search "Stephen Curry" --sport basketball
 """
 
 import argparse
 import json
+import ssl
 import sys
 import urllib.request
 import urllib.error
@@ -34,6 +35,23 @@ WEB_API = "https://site.web.api.espn.com"
 CDN_API = "https://cdn.espn.com"
 NOW_API = "https://now.core.api.espn.com"
 
+# Build an SSL context that uses system certificates. Falls back to
+# unverified context only if certifi and the default bundle are both
+# unavailable (common on macOS with stock Python).
+def _ssl_context():
+    ctx = ssl.create_default_context()
+    try:
+        import certifi
+        ctx.load_verify_locations(certifi.where())
+    except (ImportError, Exception):
+        pass
+    # Quick test: if the default cert store is empty, fall back
+    if ctx.cert_store_stats()["x509_ca"] == 0:
+        ctx = ssl._create_unverified_context()
+    return ctx
+
+_SSL_CTX = _ssl_context()
+
 
 def fetch(url, params=None):
     """Fetch JSON from a URL with optional query parameters."""
@@ -45,7 +63,7 @@ def fetch(url, params=None):
         "Accept": "application/json",
     })
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         print(f"HTTP {e.code}: {e.reason} — {url}", file=sys.stderr)
@@ -108,12 +126,14 @@ def cmd_injuries(args):
 
 
 def cmd_news(args):
-    url = f"{NOW_API}/v1/sports/news"
+    # The Now API (now.core.api.espn.com) often returns empty feeds, so
+    # we use the Site API which reliably returns articles.
+    if args.sport and args.league:
+        url = f"{SITE_API}/apis/site/v2/sports/{args.sport}/{args.league}/news"
+    else:
+        # Fallback to Now API for unfiltered global news
+        url = f"{NOW_API}/v1/sports/news"
     params = {"limit": args.limit or 20}
-    if args.sport:
-        params["sport"] = args.sport
-    if args.league:
-        params["leagues"] = args.league
     return fetch(url, params)
 
 

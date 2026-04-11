@@ -7,13 +7,13 @@
 #   ./espn_fetch.sh standings basketball nba
 #   ./espn_fetch.sh teams football nfl
 #   ./espn_fetch.sh roster basketball nba 13
-#   ./espn_fetch.sh summary basketball nba 401765432
+#   ./espn_fetch.sh summary basketball nba 401811026
 #   ./espn_fetch.sh athlete-stats basketball nba 3136776
 #   ./espn_fetch.sh athlete-gamelog basketball nba 3136776
 #   ./espn_fetch.sh injuries football nfl
 #   ./espn_fetch.sh news basketball nba
-#   ./espn_fetch.sh odds basketball nba 401765432
-#   ./espn_fetch.sh cdn-game nba 401765432
+#   ./espn_fetch.sh odds basketball nba 401811026
+#   ./espn_fetch.sh cdn-game nba 401811026
 #   ./espn_fetch.sh search "Stephen Curry"
 #
 # Pipe to jq for pretty output: ./espn_fetch.sh scoreboard basketball nba | jq .
@@ -94,9 +94,11 @@ case "$CMD" in
         ;;
     news)
         SPORT="${1:-}"; LEAGUE="${2:-}"
-        URL="${NOW_API}/v1/sports/news?limit=20"
-        [[ -n "$SPORT" ]] && URL="${URL}&sport=${SPORT}"
-        [[ -n "$LEAGUE" ]] && URL="${URL}&leagues=${LEAGUE}"
+        if [[ -n "$SPORT" && -n "$LEAGUE" ]]; then
+            URL="${SITE_API}/apis/site/v2/sports/${SPORT}/${LEAGUE}/news?limit=20"
+        else
+            URL="${NOW_API}/v1/sports/news?limit=20"
+        fi
         fetch "$URL"
         ;;
     odds)
