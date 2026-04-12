@@ -27,7 +27,7 @@ CDN_API="https://cdn.espn.com"
 NOW_API="https://now.core.api.espn.com"
 
 fetch() {
-    curl -s -f -H "User-Agent: espn-api-skill/1.0" -H "Accept: application/json" "$1"
+    curl -s -f -H "User-Agent: espn-api/1.0" -H "Accept: application/json" "$1"
 }
 
 usage() {

@@ -5,7 +5,7 @@ An [Agent Skill](https://agentskills.io) for querying ESPN's public APIs across 
 ## Install
 
 ```bash
-npx skills add sejaldua/espn-api-skill
+npx skills add sejaldua/espn-api
 ```
 
 ## What It Does

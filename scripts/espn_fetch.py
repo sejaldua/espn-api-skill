@@ -59,7 +59,7 @@ def fetch(url, params=None):
         query = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
         url = f"{url}?{query}"
     req = urllib.request.Request(url, headers={
-        "User-Agent": "espn-api-skill/1.0",
+        "User-Agent": "espn-api/1.0",
         "Accept": "application/json",
     })
     try:
